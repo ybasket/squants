@@ -10,15 +10,6 @@ package squants.experimental
 
 import scala.language.implicitConversions
 import squants._
-import squants.time.TimeIntegral
-import squants.motion._
-import squants.energy.{ SpecificEnergy, Joules }
-import squants.space.{ SquareMeters, CubicMeters }
-import squants.motion.Force
-import squants.Velocity
-import squants.motion.MassFlowRate
-import squants.Acceleration
-import squants.motion.Momentum
 
 /**
  * Represents a quantity of Mass
@@ -28,7 +19,7 @@ import squants.motion.Momentum
  *
  * @param value the value in the [[squants.mass.Grams]]
  */
-final class MassX private (val value: Double) extends QuantityX[MassX] {
+final class MassX[N] private (val value: N)(implicit val num: SquantsNumeric[N]) extends QuantityX[MassX[N], N] with MassT {
 
   def valueUnit = MassX.valueUnit
 
@@ -39,20 +30,13 @@ final class MassX private (val value: Double) extends QuantityX[MassX] {
   def toTonnes = to(Tonnes)
   def toPounds = to(Pounds)
   def toOunces = to(Ounces)
-
-  override def toString = toString(this match {
-    case Tonnes(t) if t >= 1.0      ⇒ Tonnes
-    case Kilograms(kg) if kg >= 1.0 ⇒ Kilograms
-    case Grams(g) if g >= 1.0       ⇒ Grams
-    case _                          ⇒ Milligrams
-  })
 }
 
 /**
  * Factory singleton for [[squants.mass.Mass]] values
  */
-object MassX extends QuantityCompanionX[MassX] with BaseQuantityX {
-  private[experimental] def apply[A](n: A)(implicit num: Numeric[A]) = new MassX(num.toDouble(n))
+object MassX extends QuantityCompanionX[MassX[_]] with BaseQuantityX {
+  private[experimental] def apply[N](n: N)(implicit num: SquantsNumeric[N]) = new MassX(n)
   def apply = parseString _
   def name = "Mass"
   def valueUnit = Grams
@@ -64,8 +48,8 @@ object MassX extends QuantityCompanionX[MassX] with BaseQuantityX {
 /**
  * Base trait for units of [[squants.mass.Mass]]
  */
-trait MassUnitX extends UnitOfMeasureX[MassX] with UnitConverterX {
-  def apply[A](n: A)(implicit num: Numeric[A]) = MassX(convertFrom(n))
+trait MassUnitX extends UnitOfMeasureX[MassX[_]] {
+  def apply[N](n: N)(implicit num: SquantsNumeric[N]) = MassX[N](convertFrom(n))
 }
 
 object Grams extends MassUnitX with ValueUnitX {
@@ -116,7 +100,7 @@ object MassConversionsX {
   lazy val pound = Pounds(1)
   lazy val ounce = Ounces(1)
 
-  implicit class MassConversionsX[A](n: A)(implicit num: Numeric[A]) {
+  implicit class MassConversionsX[A](n: A)(implicit num: SquantsNumeric[A]) {
     def mcg = Micrograms(n)
     def mg = Milligrams(n)
     def milligrams = mg
@@ -133,6 +117,6 @@ object MassConversionsX {
     def toMass = MassX(s)
   }
 
-  implicit object MassNumericX extends AbstractQuantityNumericX[MassX](MassX.valueUnit)
+  class MassNumericX[N] extends AbstractQuantityNumericX[MassX[N], N](MassX.valueUnit)
 }
 

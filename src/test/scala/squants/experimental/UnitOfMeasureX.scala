@@ -14,65 +14,28 @@ package squants.experimental
  * @author  garyKeorkunian
  * @since   0.1
  *
- * @tparam A The type of Quantity being measured
+ * @tparam T The type of Quantity being measured
  */
-trait UnitOfMeasureX[A <: QuantityX[A]] extends Serializable {
+trait UnitOfMeasureX[T <: QuantityX[T, _]] extends Serializable {
   /**
    * Factory method for creating instances of a Quantity in this UnitOfMeasure
    * @param n N - the Quantity's value in terms of this UnitOfMeasure
    * @return
    */
-  def apply[N](n: N)(implicit num: Numeric[N]): A
+  def apply[N](n: N)(implicit num: SquantsNumeric[N]): T
 
   /**
    * Extractor method for getting the Numeric value of a Quantity in this UnitOfMeasure
    * @param q A - The Quantity being matched
    * @return
    */
-  def unapply(q: A) = Some(q.to(this))
+  def unapply(q: T) = Some(q.to(this))
 
   /**
    * Symbol used when representing Quantities in this UnitOfMeasure
    * @return
    */
   def symbol: String
-
-  /**
-   * Defines a signature for converting a quantity from this UOM to the Value UOM
-   * @return
-   */
-  protected def converterFrom: Double ⇒ Double
-
-  /**
-   * Defines a signature for converting a quantity to this UOM from the Value UOM
-   * @return
-   */
-  protected def converterTo: Double ⇒ Double
-
-  /**
-   * Applies the converterTo method to a value
-   * @param n N value in terms of teh ValueUnit
-   * @param num Numeric[N]
-   * @tparam N Type
-   * @return
-   */
-  final def convertTo[N](n: N)(implicit num: Numeric[N]) = converterTo(num.toDouble(n))
-
-  /**
-   * Applies the converterFrom method to a value
-   *
-   * @param n N value in terms of this Unit
-   * @param num Numeric[N]
-   * @tparam N Type
-   * @return
-   */
-  final def convertFrom[N](n: N)(implicit num: Numeric[N]) = converterFrom(num.toDouble(n))
-}
-
-/**
- * A Unit of Measure that require a simple multiplier for converting to and from the underlying value's unit
- */
-trait UnitConverterX { uom: UnitOfMeasureX[_] ⇒
 
   /**
    * Defines a multiplier value relative to the Quantity's [[squants.ValueUnit]]
@@ -82,16 +45,23 @@ trait UnitConverterX { uom: UnitOfMeasureX[_] ⇒
   protected def conversionFactor: Double
 
   /**
-   * Implements the converterTo method as a simple quotient of the value and the multiplier
+   * Applies the converterTo method to a value
+   * @param n N value in terms of the ValueUnit
+   * @param num SquantsNumeric[N]
+   * @tparam N Type
    * @return
    */
-  protected def converterTo: Double ⇒ Double = value ⇒ value / conversionFactor
+  final def convertTo[N](n: N)(implicit num: SquantsNumeric[N]) = num.divide(n, num.fromDouble(conversionFactor))
 
   /**
-   * Implements the converterFrom method as a simple product of the value and the multiplier
+   * Applies the converterFrom method to a value
+   *
+   * @param n N value in terms of this Unit
+   * @param num SquantsNumeric[N]
+   * @tparam N Type
    * @return
    */
-  protected def converterFrom: Double ⇒ Double = value ⇒ value * conversionFactor
+  final def convertFrom[N](n: N)(implicit num: SquantsNumeric[N]) = num.times(n, num.fromDouble(conversionFactor))
 }
 
 /**
@@ -99,19 +69,7 @@ trait UnitConverterX { uom: UnitOfMeasureX[_] ⇒
  *
  * Each Quantity should have one and only one ValueUnit
  */
-trait ValueUnitX extends UnitConverterX { uom: UnitOfMeasureX[_] ⇒
-
-  /**
-   * Implements the converterTo method to just return the underlying value
-   * @return
-   */
-  override final def converterTo: Double ⇒ Double = value ⇒ value
-
-  /**
-   * Implements the converterFrom method to just return the underlying value
-   * @return
-   */
-  override final def converterFrom: Double ⇒ Double = value ⇒ value
+trait ValueUnitX { uom: UnitOfMeasureX[_] ⇒
 
   /**
    * Value unit multiplier is always equal to 1

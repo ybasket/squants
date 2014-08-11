@@ -17,108 +17,113 @@ import scala.util.{ Failure, Success, Try }
  * @since   0.1
  *
  */
-abstract class QuantityX[A <: QuantityX[A]] extends Ordered[A] with Serializable { self: A ⇒
+abstract class QuantityX[T <: QuantityX[T, N], N] extends Ordered[T] with Serializable { self: T ⇒
+
+  implicit val num: SquantsNumeric[N]
+  import num.mkSquantsNumericOps
 
   /**
    * The value of the quantity given the valueUnits
    * @return Double
    */
-  def value: Double
+  def value: N
 
   /**
    * The Unit of Measure used for the quantity's underlying value
-   * @return UnitOfMeasure[A]
+   * @return UnitOfMeasure[T]
    */
-  def valueUnit: UnitOfMeasureX[A]
+  def valueUnit: UnitOfMeasureX[T]
+
+  private def createQty(n: N): T = valueUnit(n)
 
   /**
    * Add two like quantities
    * @param that Quantity
    * @return Quantity
    */
-  def plus(that: A): A = valueUnit(value + that.value)
-  def +(that: A): A = plus(that)
+  def plus(that: T): T = createQty(value + that.value)
+  def +(that: T): T = plus(that)
 
   /**
    * Subtract two like quantities
    * @param that Quantity
    * @return Quantity
    */
-  def minus(that: A): A = plus(that.negate)
-  def -(that: A): A = minus(that)
+  def minus(that: T): T = plus(that.negate)
+  def -(that: T): T = minus(that)
 
   /**
    * Multiply this quantity by some number
    * @param that Double
    * @return Quantity
    */
-  def times(that: Double): A = valueUnit(value * that)
-  def *(that: Double): A = times(that)
+  def times(that: N): T = createQty(value * that)
+  def *(that: N): T = times(that)
 
   /**
    * Divide this quantity by some number
    * @param that Double
    * @return Quantity
    */
-  def divide(that: Double): A = valueUnit(value / that)
-  def /(that: Double): A = divide(that)
+  def divide(that: N): T = createQty(value / that)
+  def /(that: N): T = divide(that)
 
   /**
    * Divide this quantity by a like quantity
    * @param that Quantity
    * @return Double
    */
-  def divide(that: A): Double = value / that.value
-  def /(that: A): Double = divide(that)
+  def divide(that: T): N = value / that.value
+  def /(that: T): N = divide(that)
 
   /**
    * Returns the remainder of a division by a number
    * @param that Quantity
    * @return Quantity
    */
-  def remainder(that: Double): A = valueUnit(value % that)
-  def %(that: Double): A = remainder(that)
+  def remainder(that: N): T = createQty(value % that)
+  def %(that: N): T = remainder(that)
 
   /**
    * Returns the remainder of a division by a like quantity
    * @param that Quantity
    * @return Double
    */
-  def remainder(that: A): Double = value % that.value
-  def %(that: A): Double = remainder(that)
+  def remainder(that: T): N = value % that.value
+  def %(that: T): N = remainder(that)
 
   /**
    * Returns a Pair that includes the result of divideToInteger and remainder
    * @param that Double
    * @return (Quantity, Quantity)
    */
-  def divideAndRemainder(that: Double): (A, A) = BigDecimal(value) /% that match {
-    case (q, r) ⇒ (valueUnit(q.toDouble), valueUnit(r.toDouble))
+  def divideAndRemainder(that: N): (T, T) = value /% that match {
+    case (q, r) ⇒ (createQty(q), createQty(r))
   }
-  def /%(that: Double) = divideAndRemainder(that)
+  def /%(that: N) = divideAndRemainder(that)
 
   /**
    * Returns a Pair that includes the result of divideToInteger and remainder
    * @param that Quantity
    * @return (Double, Quantity)
    */
-  def divideAndRemainder(that: A): (Double, A) = BigDecimal(value) /% that.value match {
-    case (q, r) ⇒ (q.toDouble, valueUnit(r.toDouble))
+  def divideAndRemainder(that: T): (N, T) = value /% that.value match {
+    case (q, r) ⇒ (q, createQty(r))
   }
-  def /%(that: A) = divideAndRemainder(that)
+  def /%(that: T) = divideAndRemainder(that)
 
   /**
    * Returns the negative value of this Quantity
    * @return Quantity
    */
-  def negate: A = valueUnit(-value)
-  def unary_-(): A = negate
+  def negate: T = createQty(-value)
+  def unary_-(): T = negate
 
   /**
    * Returns the absolute value of this Quantity
    * @return Quantity
    */
-  def abs: A = valueUnit(math.abs(value))
+  def abs: T = createQty(num.abs(value))
 
   /**
    * Override of equals method
@@ -129,8 +134,8 @@ abstract class QuantityX[A <: QuantityX[A]] extends Ordered[A] with Serializable
   override def equals(that: Any) = that match {
     // TODO Refactor so it also works for UnitBoxed types like Temperature, which may require change to UOM def
     // Currently this is satisfied by overrides in those classes
-    case x: QuantityX[A] ⇒ value == x.value && valueUnit == x.valueUnit
-    case _               ⇒ false
+    case x: QuantityX[T, _] ⇒ value == x.value && valueUnit == x.valueUnit
+    case _                  ⇒ false
   }
 
   /**
@@ -146,63 +151,63 @@ abstract class QuantityX[A <: QuantityX[A]] extends Ordered[A] with Serializable
    * @param tolerance Quantity
    * @return
    */
-  def approx(that: A)(implicit tolerance: A) = that within this.plusOrMinus(tolerance)
+  def approx(that: T)(implicit tolerance: T) = that within this.plusOrMinus(tolerance)
   /** approx */
-  def =~(that: A)(implicit tolerance: A) = approx(that)
+  def =~(that: T)(implicit tolerance: T) = approx(that)
   /** approx */
-  def ≈(that: A)(implicit tolerance: A) = approx(that)
+  def ≈(that: T)(implicit tolerance: T) = approx(that)
   /** approx */
-  def ~=(that: A)(implicit tolerance: A) = approx(that)
+  def ~=(that: T)(implicit tolerance: T) = approx(that)
 
   /**
    * Implements Ordered.compare
    * @param that Quantity
    * @return Int
    */
-  def compare(that: A) = if (value > that.value) 1 else if (value < that.value) -1 else 0
+  def compare(that: T) = if (value > that.value) 1 else if (value < that.value) -1 else 0
 
   /**
    * Returns the max of this and that Quantity
    * @param that Quantity
    * @return Quantity
    */
-  def max(that: A): A = if (value >= that.value) this else that
+  def max(that: T): T = if (value >= that.value) this else that
 
   /**
    * Returns the min of this and that Quantity
    * @param that Quantity
    * @return Quantity
    */
-  def min(that: A): A = if (value <= that.value) this else that
+  def min(that: T): T = if (value <= that.value) this else that
 
   /**
    * Returns a QuantityRange representing the range for this value +- that
    * @param that Quantity
    * @return QuantityRange
    */
-  def plusOrMinus(that: A): QuantityRangeX[A] = QuantityRangeX(this - that, this + that)
-  def +-(that: A) = plusOrMinus(that)
+  def plusOrMinus(that: T): QuantityRangeX[T, N] = QuantityRangeX[T, N](this - that, this + that)
+  def +-(that: T) = plusOrMinus(that)
 
   /**
    * Returns a QuantityRange that goes from this to that
    * @param that Quantity
    * @return QuantityRange
    */
-  def to(that: A): QuantityRangeX[A] = QuantityRangeX(this / 1, that)
+  def to(that: T): QuantityRangeX[T, N] = QuantityRangeX[T, N](this / num.fromInt(1), that)
 
   /**
    * Returns true if this value is within (contains) the range
    * @param range QuantityRange
    * @return Boolean
    */
-  def within(range: QuantityRangeX[A]) = range.contains(self)
+  def within(range: QuantityRangeX[T, N]) = range.contains(self)
 
   /**
    * Returns true if this value is not within (contains) the range
    * @param range QuantityRange
    * @return Boolean
    */
-  def notWithin(range: QuantityRangeX[A]) = !range.contains(self)
+  def notWithin(range: QuantityRangeX[T, N]) = !range.contains(self)
 
   /**
    * Returns a Double representing the quantity in terms of the supplied unit
@@ -213,7 +218,7 @@ abstract class QuantityX[A <: QuantityX[A]] extends Ordered[A] with Serializable
    * @param unit UnitOfMeasure[A]
    * @return Double
    */
-  def to(unit: UnitOfMeasureX[A]): Double = unit.convertTo(valueUnit.convertFrom(value))
+  def to(unit: UnitOfMeasureX[T]): N = unit.convertTo(valueUnit.convertFrom(value))
 
   /**
    * Returns an equivalent Quantity boxed with the supplied Unit
@@ -224,20 +229,20 @@ abstract class QuantityX[A <: QuantityX[A]] extends Ordered[A] with Serializable
    * @param unit UnitOfMeasure[A]
    * @return Quantity
    */
-  def in(unit: UnitOfMeasureX[A]) = unit(unit.convertTo(valueUnit.convertFrom(value)))
+  def in(unit: UnitOfMeasureX[T]) = unit(unit.convertTo(valueUnit.convertFrom(value)))
 
   /**
    * Returns a string representing the quantity's value in valueUnits
    * @return String
    */
-  override def toString = value + " " + valueUnit.symbol
+  override def toString = value.toString + " " + valueUnit.symbol
 
   /**
    * Returns a string representing the quantity's value in the given `unit`
    * @param unit UnitOfMeasure[A] with UnitConverter
    * @return String
    */
-  def toString(unit: UnitOfMeasureX[A]): String = to(unit) + " " + unit.symbol
+  def toString(unit: UnitOfMeasureX[T]): String = to(unit).toString + " " + unit.symbol
 
   /**
    * Returns a string representing the quantity's value in the given `unit` in the given `format`
@@ -245,7 +250,7 @@ abstract class QuantityX[A <: QuantityX[A]] extends Ordered[A] with Serializable
    * @param format String containing the format for the value (ie "%.3f")
    * @return String
    */
-  def toString(unit: UnitOfMeasureX[A], format: String): String = "%s %s".format(format.format(to(unit)), unit.symbol)
+  def toString(unit: UnitOfMeasureX[T], format: String): String = "%s %s".format(format.format(to(unit)), unit.symbol)
 }
 
 /**
@@ -255,7 +260,11 @@ abstract class QuantityX[A <: QuantityX[A]] extends Ordered[A] with Serializable
  *
  * @tparam A Quantity type
  */
-abstract class AbstractQuantityNumericX[A <: QuantityX[A]](val valueUnit: UnitOfMeasureX[A] with ValueUnitX) extends Numeric[A] {
+abstract class AbstractQuantityNumericX[A <: QuantityX[A, B], B](val valueUnit: UnitOfMeasureX[A] with ValueUnitX) extends Numeric[A] {
+
+  implicit val num: SquantsNumeric[B]
+  import num.mkSquantsNumericOps
+
   def plus(x: A, y: A) = x + y
   def minus(x: A, y: A) = x - y
 
@@ -271,17 +280,17 @@ abstract class AbstractQuantityNumericX[A <: QuantityX[A]](val valueUnit: UnitOf
    */
   def times(x: A, y: A): A = throw new UnsupportedOperationException("Numeric.times not supported for Quantities")
   def negate(x: A) = -x
-  def fromInt(x: Int) = valueUnit(x)
-  def toInt(x: A) = x.value.toInt
-  def toLong(x: A) = x.value.toLong
-  def toFloat(x: A) = x.value.toFloat
-  def toDouble(x: A) = x.value
+  def fromInt(x: Int) = valueUnit(num.fromInt(x))
+  def toInt(x: A) = x.value.toInt()
+  def toLong(x: A) = x.value.toLong()
+  def toFloat(x: A) = x.value.toFloat()
+  def toDouble(x: A) = x.value.toDouble()
   def compare(x: A, y: A) = if (x.value > y.value) 1 else if (x.value < y.value) -1 else 0
 }
 
 case class QuantityStringParseException(message: String, expression: String) extends Exception
 
-trait QuantityCompanionX[A <: QuantityX[A]] {
+trait QuantityCompanionX[A <: QuantityX[A, _]] {
   def name: String
   def valueUnit: UnitOfMeasureX[A] with ValueUnitX
   def units: Set[UnitOfMeasureX[A]]

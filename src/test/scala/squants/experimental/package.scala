@@ -19,6 +19,8 @@ package squants
  */
 package object experimental {
 
-  type QuantitySeriesX[A <: QuantityX[A]] = IndexedSeq[QuantityRangeX[A]]
+  import SquantsNumeric.BigDecimalIsSquantsNumeric
+
+  type QuantitySeriesX[A <: QuantityX[A, B], B] = IndexedSeq[QuantityRangeX[A, B]]
 
 }
