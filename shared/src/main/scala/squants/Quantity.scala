@@ -20,7 +20,7 @@ import scala.math.BigDecimal.RoundingMode.RoundingMode
  * @since   0.1
  *
  */
-abstract class Quantity[A <: Quantity[A]] extends Serializable with Ordered[A] { self: A ⇒
+abstract class Quantity[A <: Quantity[A]] extends Serializable with Ordered[A] { self: A =>
 
   /**
    * The value of the quantity given the unit
@@ -102,7 +102,7 @@ abstract class Quantity[A <: Quantity[A]] extends Serializable with Ordered[A] {
    * @return (Quantity, Quantity)
    */
   def divideAndRemainder(that: Double): (A, A) = BigDecimal(value) /% that match {
-    case (q, r) ⇒ (unit(q.toDouble), unit(r.toDouble))
+    case (q, r) => (unit(q.toDouble), unit(r.toDouble))
   }
   def /%(that: Double) = divideAndRemainder(that)
 
@@ -112,7 +112,7 @@ abstract class Quantity[A <: Quantity[A]] extends Serializable with Ordered[A] {
    * @return (Double, Quantity)
    */
   def divideAndRemainder(that: A): (Double, A) = BigDecimal(value) /% that.to(unit) match {
-    case (q, r) ⇒ (q.toDouble, unit(r.toDouble))
+    case (q, r) => (q.toDouble, unit(r.toDouble))
   }
   def /%(that: A) = divideAndRemainder(that)
 
@@ -169,8 +169,8 @@ abstract class Quantity[A <: Quantity[A]] extends Serializable with Ordered[A] {
    * @return
    */
   override def equals(that: Any) = that match {
-    case x: Quantity[A] if x.dimension == dimension ⇒ value == x.to(unit)
-    case _ ⇒ false
+    case x: Quantity[A] if x.dimension == dimension => value == x.to(unit)
+    case _ => false
   }
 
   /**
@@ -256,8 +256,8 @@ abstract class Quantity[A <: Quantity[A]] extends Serializable with Ordered[A] {
    * @return Double
    */
   def to(uom: UnitOfMeasure[A]): Double = uom match {
-    case u if u == this.unit ⇒ value
-    case _                   ⇒ uom.convertTo(this.unit.convertFrom(value))
+    case u if u == this.unit => value
+    case _                   => uom.convertTo(this.unit.convertFrom(value))
   }
 
   /**
@@ -266,8 +266,8 @@ abstract class Quantity[A <: Quantity[A]] extends Serializable with Ordered[A] {
    * @return Quantity
    */
   def in(uom: UnitOfMeasure[A]) = uom match {
-    case u if u == this.unit ⇒ this
-    case _                   ⇒ uom(uom.convertTo(this.unit.convertFrom(value)))
+    case u if u == this.unit => this
+    case _                   => uom(uom.convertTo(this.unit.convertFrom(value)))
   }
 
   /**
@@ -309,6 +309,6 @@ abstract class Quantity[A <: Quantity[A]] extends Serializable with Ordered[A] {
    * @param f Double => Double function
    * @return
    */
-  def map(f: Double ⇒ Double): A = unit(f(value))
+  def map(f: Double => Double): A = unit(f(value))
 }
 

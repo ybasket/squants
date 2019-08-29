@@ -518,12 +518,12 @@ class QuantitySpec extends FlatSpec with Matchers with CustomMatchers with TryVa
   it should "return the correct Numeric value when pattern matched against a Unit of Measure" in {
     val x = Thangs(1200)
     val thangs = x match {
-      case Thangs(v) ⇒ v
+      case Thangs(v) => v
     }
     thangs should be(1200)
 
     val kilothangs = x match {
-      case Kilothangs(v) ⇒ v
+      case Kilothangs(v) => v
     }
     kilothangs should be(1.2)
   }

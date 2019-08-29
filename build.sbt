@@ -9,7 +9,7 @@ lazy val defaultSettings =
   Docs.defaultSettings
 
 lazy val squants =
-  crossProject(JSPlatform, JVMPlatform, NativePlatform)
+  crossProject(/*JSPlatform,*/ JVMPlatform/*, NativePlatform*/)
   .crossType(CrossType.Full)
   .in(file("."))
   .settings(defaultSettings: _*)
@@ -22,11 +22,11 @@ lazy val squants =
     tutSourceDirectory := file("shared") / "src" / "main" / "tut"
   )
   .jvmSettings(Tests.defaultSettings: _*)
-  .jsSettings(
+  /*.jsSettings(
     parallelExecution in Test := false,
     excludeFilter in Test := "*Serializer.scala" || "*SerializerSpec.scala"
   )
-  .jsSettings(Tests.defaultSettings: _*)
+  .jsSettings(Tests.defaultSettings: _*)*/
 
 lazy val root = project.in(file("."))
   .settings(defaultSettings: _*)
@@ -36,4 +36,4 @@ lazy val root = project.in(file("."))
     publishLocal := {},
     publishArtifact := false
   )
-  .aggregate(squants.jvm, squants.js, squants.native)
+  .aggregate(squants.jvm/*, squants.js*//*, squants.native*/)

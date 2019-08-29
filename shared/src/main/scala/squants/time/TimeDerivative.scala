@@ -31,7 +31,7 @@ trait TimeDerivative[A <: Quantity[A] with TimeIntegral[_]] {
   def *(that: Time): A = timeIntegrated * (that / this.time)
 }
 
-trait SecondTimeDerivative[A <: SecondTimeIntegral[_]] { self: TimeDerivative[_] ⇒
+trait SecondTimeDerivative[A <: SecondTimeIntegral[_]] { self: TimeDerivative[_] =>
   protected[squants] def time: Time
   def *(that: TimeSquared): A
 }
@@ -75,7 +75,7 @@ trait TimeIntegral[A <: Quantity[A] with TimeDerivative[_]] {
   def *(that: Frequency): A = /(this.time) * (this.time * that).toEach
 }
 
-trait SecondTimeIntegral[A <: SecondTimeDerivative[_]] { self: TimeIntegral[_] ⇒
+trait SecondTimeIntegral[A <: SecondTimeDerivative[_]] { self: TimeIntegral[_] =>
   def /(that: A): TimeSquared
   def /(that: TimeSquared): A
   def per(that: TimeSquared): A = /(that)

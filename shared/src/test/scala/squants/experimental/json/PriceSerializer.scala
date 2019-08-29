@@ -30,7 +30,7 @@ sealed trait PriceSerializerT[A <: Quantity[A]] extends Serializer[Price[A]] {
   implicit def fxContext: MoneyContext
 
   protected def Clazz = classOf[Price[A]]
-  def parseQuantity: String ⇒ Try[A]
+  def parseQuantity: String => Try[A]
   private def QuantityValidator(s: String) = parseQuantity(s).isSuccess
   private def StringToQuantity(s: String) = parseQuantity(s).get
 
@@ -43,7 +43,7 @@ sealed trait PriceSerializerT[A <: Quantity[A]] extends Serializer[Price[A]] {
     // Using jsonContainsValidQuantity to verify if this deserializer partial is the proper one
     // is suspect, as some units of different quantity types may use the same symbol.
     // TODO - Come up with better way to verify that this is the Serializer for a given Price[A]
-    case (TypeInfo(price, _), json) if Clazz.isAssignableFrom(price) && jsonContainsValidQuantity(json, QuantityValidator) ⇒
+    case (TypeInfo(price, _), json) if Clazz.isAssignableFrom(price) && jsonContainsValidQuantity(json, QuantityValidator) =>
       deserializePrice[A](json, StringToQuantity)
   }
 
@@ -54,21 +54,21 @@ sealed trait PriceSerializerT[A <: Quantity[A]] extends Serializer[Price[A]] {
    * @tparam B Quantity Type
    * @return
    */
-  def deserializePrice[B <: Quantity[B]](json: JValue, stringToQuantity: String ⇒ B): Price[B] = json match {
+  def deserializePrice[B <: Quantity[B]](json: JValue, stringToQuantity: String => B): Price[B] = json match {
     case JObject(List(
       JField("amount", JDecimal(amount)),
       JField("currency", JString(currency)),
-      JField("per", JString(per)))) ⇒
+      JField("per", JString(per)))) =>
       Price(Money(amount, currency).get, stringToQuantity(per))
     case JObject(List(
       JField("amount", JInt(amount)),
       JField("currency", JString(currency)),
-      JField("per", JString(per)))) ⇒
+      JField("per", JString(per)))) =>
       Price(Money(amount.toDouble, currency).get, stringToQuantity(per))
   }
 
   def serialize(implicit format: Formats) = {
-    case p: Price[_] ⇒ serializePrice(p)
+    case p: Price[_] => serializePrice(p)
   }
 
   /**
@@ -93,12 +93,12 @@ sealed trait PriceSerializerT[A <: Quantity[A]] extends Serializer[Price[A]] {
    * @param quantityValidator Function for validating the "per" value
    * @return
    */
-  def jsonContainsValidQuantity(json: JValue, quantityValidator: String ⇒ Boolean): Boolean = {
+  def jsonContainsValidQuantity(json: JValue, quantityValidator: String => Boolean): Boolean = {
     json match {
       case JObject(List(
         JField("amount", _),
         JField("currency", _),
-        JField("per", JString(per)))) ⇒ quantityValidator(per)
+        JField("per", JString(per)))) => quantityValidator(per)
     }
   }
 }
@@ -108,15 +108,15 @@ sealed trait PriceSerializerT[A <: Quantity[A]] extends Serializer[Price[A]] {
  */
 class EnergyPriceSerializer(ctx: MoneyContext) extends PriceSerializerT[Energy] {
   implicit lazy val fxContext = ctx
-  def parseQuantity = s ⇒ Energy(s)
+  def parseQuantity = s => Energy(s)
 }
 
 class MassPriceSerializer(ctx: MoneyContext) extends PriceSerializerT[Mass] {
   implicit lazy val fxContext = ctx
-  def parseQuantity = s ⇒ Mass(s)
+  def parseQuantity = s => Mass(s)
 }
 
 class TimePriceSerializer(ctx: MoneyContext) extends PriceSerializerT[Time] {
   implicit lazy val fxContext = ctx
-  def parseQuantity = s ⇒ Time(s)
+  def parseQuantity = s => Time(s)
 }

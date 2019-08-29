@@ -15,7 +15,7 @@ package squants.experimental
  * @since   0.1
  *
  */
-abstract class Quantity[A <: Quantity[A, _], N](implicit val sqNum: SquantsNumeric[N]) extends Serializable with Ordered[Quantity[A, N]] { self: Quantity[A, N] ⇒
+abstract class Quantity[A <: Quantity[A, _], N](implicit val sqNum: SquantsNumeric[N]) extends Serializable with Ordered[Quantity[A, N]] { self: Quantity[A, N] =>
 
   import sqNum.mkSquantsNumericOps
 
@@ -101,7 +101,7 @@ abstract class Quantity[A <: Quantity[A, _], N](implicit val sqNum: SquantsNumer
    * @return (Quantity, Quantity)
    */
   def divideAndRemainder(that: N): (A, A) = value /% that match {
-    case (q, r) ⇒ (unit(q).asInstanceOf[A], unit(r).asInstanceOf[A])
+    case (q, r) => (unit(q).asInstanceOf[A], unit(r).asInstanceOf[A])
   }
   def /%(that: N) = divideAndRemainder(that)
 
@@ -111,7 +111,7 @@ abstract class Quantity[A <: Quantity[A, _], N](implicit val sqNum: SquantsNumer
    * @return (N, Quantity)
    */
   def divideAndRemainder(that: AN): (N, A) = value /% that.to(unit) match {
-    case (q, r) ⇒ (q, unit(r).asInstanceOf[A])
+    case (q, r) => (q, unit(r).asInstanceOf[A])
   }
   def /%(that: AN) = divideAndRemainder(that)
 
@@ -135,8 +135,8 @@ abstract class Quantity[A <: Quantity[A, _], N](implicit val sqNum: SquantsNumer
    * @return
    */
   override def equals(that: Any) = that match {
-    case x: Quantity[A, _] if x.dimension == dimension ⇒ value == x.to(unit)
-    case _ ⇒ false
+    case x: Quantity[A, _] if x.dimension == dimension => value == x.to(unit)
+    case _ => false
   }
 
   /**
@@ -220,8 +220,8 @@ abstract class Quantity[A <: Quantity[A, _], N](implicit val sqNum: SquantsNumer
    * @return N
    */
   def to(uom: UnitOfMeasure[A]): N = uom match {
-    case u if u == this.unit ⇒ value
-    case _                   ⇒ uom.convertTo(this.unit.convertFrom(value))
+    case u if u == this.unit => value
+    case _                   => uom.convertTo(this.unit.convertFrom(value))
   }
 
   /**
@@ -230,8 +230,8 @@ abstract class Quantity[A <: Quantity[A, _], N](implicit val sqNum: SquantsNumer
    * @return Quantity
    */
   def in(uom: UnitOfMeasure[A]) = uom match {
-    case u if u == this.unit ⇒ this
-    case _                   ⇒ uom(uom.convertTo(this.unit.convertFrom(value)))
+    case u if u == this.unit => this
+    case _                   => uom(uom.convertTo(this.unit.convertFrom(value)))
   }
 
   /**
@@ -273,6 +273,6 @@ abstract class Quantity[A <: Quantity[A, _], N](implicit val sqNum: SquantsNumer
    * @param f N => N function
    * @return
    */
-  def map(f: N ⇒ N) = unit(f(value))
+  def map(f: N => N) = unit(f(value))
 
 }

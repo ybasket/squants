@@ -28,27 +28,27 @@ abstract class QuantitySerializer[A <: Quantity[A]] //(unitOfMeasure: UnitOfMeas
 
   protected def Clazz: Class[_]
   protected def dimension: Dimension[A]
-  protected def symbolToUnit: String ⇒ Option[UnitOfMeasure[A]] = dimension.units.map {
-    u ⇒
+  protected def symbolToUnit: String => Option[UnitOfMeasure[A]] = dimension.units.map {
+    u =>
       u.symbol -> u
   }.toMap.get
 
   val c = Clazz
   def deserialize(implicit format: Formats) = {
-    case (TypeInfo(q, _), json) if Clazz.isAssignableFrom(q) ⇒ json match {
+    case (TypeInfo(q, _), json) if Clazz.isAssignableFrom(q) => json match {
       case JObject(List(
         JField("value", JDecimal(value)),
-        JField("unit", JString(unit)))) ⇒
+        JField("unit", JString(unit)))) =>
         symbolToUnit(unit) match {
-          case Some(u) ⇒ u(value)
-          case None    ⇒ throw new Exception(s"Could not find matching unit for symbol $unit")
+          case Some(u) => u(value)
+          case None    => throw new Exception(s"Could not find matching unit for symbol $unit")
         }
       case JObject(List(
         JField("value", JInt(value)),
-        JField("unit", JString(unit)))) ⇒
+        JField("unit", JString(unit)))) =>
         symbolToUnit(unit) match {
-          case Some(u) ⇒ u(value)
-          case None    ⇒ throw new Exception(s"Could not find matching unit for symbol $unit")
+          case Some(u) => u(value)
+          case None    => throw new Exception(s"Could not find matching unit for symbol $unit")
         }
     }
   }
@@ -67,7 +67,7 @@ class PowerSerializer extends QuantitySerializer[Power] {
   protected val Clazz = classOf[Power]
   protected val dimension = Power
   def serialize(implicit format: Formats) = {
-    case p: Power ⇒ serializeQuantity(p)
+    case p: Power => serializeQuantity(p)
   }
 }
 
@@ -75,7 +75,7 @@ class TimeSerializer extends QuantitySerializer[Time] {
   protected val Clazz = classOf[Time]
   protected val dimension = Time
   def serialize(implicit format: Formats) = {
-    case t: Time ⇒ serializeQuantity(t)
+    case t: Time => serializeQuantity(t)
   }
 }
 
@@ -83,6 +83,6 @@ class MassSerializer extends QuantitySerializer[Mass] {
   protected val Clazz = classOf[Mass]
   protected val dimension = Mass
   def serialize(implicit format: Formats) = {
-    case m: Mass ⇒ serializeQuantity(m)
+    case m: Mass => serializeQuantity(m)
   }
 }

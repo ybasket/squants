@@ -44,13 +44,13 @@ trait UnitOfMeasure[A <: Quantity[A, _]] extends Serializable {
    * Defines a signature for converting a quantity from this UOM to the Primary UOM
    * @return
    */
-  protected def converterFrom[N]: (N, SquantsNumeric[N]) ⇒ N
+  protected def converterFrom[N]: (N, SquantsNumeric[N]) => N
 
   /**
    * Defines a signature for converting a quantity to this UOM from the Primary UOM
    * @return
    */
-  protected def converterTo[N]: (N, SquantsNumeric[N]) ⇒ N
+  protected def converterTo[N]: (N, SquantsNumeric[N]) => N
 
   /**
    * Applies the converterTo method to a value
@@ -73,7 +73,7 @@ trait UnitOfMeasure[A <: Quantity[A, _]] extends Serializable {
 /**
  * A Unit of Measure that require a simple multiplier for converting to and from the underlying value's unit
  */
-trait UnitConverter { uom: UnitOfMeasure[_] ⇒
+trait UnitConverter { uom: UnitOfMeasure[_] =>
 
   /**
    * Defines a multiplier value relative to the Quantity's [[squants.PrimaryUnit]]
@@ -86,13 +86,13 @@ trait UnitConverter { uom: UnitOfMeasure[_] ⇒
    * Implements the converterTo method as a simple quotient of the value and the multiplier
    * @return
    */
-  protected def converterTo[N]: (N, SquantsNumeric[N]) ⇒ N = (n, sqNum) ⇒ sqNum.divide(n, sqNum.fromDouble(conversionFactor))
+  protected def converterTo[N]: (N, SquantsNumeric[N]) => N = (n, sqNum) => sqNum.divide(n, sqNum.fromDouble(conversionFactor))
 
   /**
    * Implements the converterFrom method as a simple product of the value and the multiplier
    * @return
    */
-  protected def converterFrom[N]: (N, SquantsNumeric[N]) ⇒ N = (n, sqNum) ⇒ sqNum.times(n, sqNum.fromDouble(conversionFactor))
+  protected def converterFrom[N]: (N, SquantsNumeric[N]) => N = (n, sqNum) => sqNum.times(n, sqNum.fromDouble(conversionFactor))
 
 }
 
@@ -103,19 +103,19 @@ trait UnitConverter { uom: UnitOfMeasure[_] ⇒
  *
  * Each Quantity should have one and only one ValueUnit
  */
-trait PrimaryUnit extends UnitConverter { uom: UnitOfMeasure[_] ⇒
+trait PrimaryUnit extends UnitConverter { uom: UnitOfMeasure[_] =>
 
   /**
    * Implements the converterTo method to just return the underlying value
    * @return
    */
-  override final def converterTo[N]: (N, SquantsNumeric[N]) ⇒ N = (n, sqNum) ⇒ n
+  override final def converterTo[N]: (N, SquantsNumeric[N]) => N = (n, sqNum) => n
 
   /**
    * Implements the converterFrom method to just return the underlying value
    * @return
    */
-  override final def converterFrom[N]: (N, SquantsNumeric[N]) ⇒ N = (n, sqNum) ⇒ n
+  override final def converterFrom[N]: (N, SquantsNumeric[N]) => N = (n, sqNum) => n
 
   /**
    * Value unit multiplier is always equal to 1

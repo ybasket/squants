@@ -22,22 +22,22 @@ class MoneySerializer(fxContext: MoneyContext) extends Serializer[Money] {
   import MoneySerializer._
 
   def deserialize(implicit format: Formats) = {
-    case (TypeInfo(money, _), json) if Clazz.isAssignableFrom(money) ⇒ json match {
+    case (TypeInfo(money, _), json) if Clazz.isAssignableFrom(money) => json match {
       case JObject(List(
         JField("amount", JDecimal(_)),
-        JField("currency", JString(_)))) ⇒
+        JField("currency", JString(_)))) =>
         val m = json.extract[MoneyData]
         Money(m.amount, m.currency)(fxContext).get
       case JObject(List(
         JField("amount", JInt(_)),
-        JField("currency", JString(_)))) ⇒
+        JField("currency", JString(_)))) =>
         val m = json.extract[MoneyData]
         Money(m.amount, m.currency)(fxContext).get
     }
   }
 
   def serialize(implicit format: Formats) = {
-    case money: Money ⇒
+    case money: Money =>
       JObject(
         List(
           "amount" -> JDecimal(money.amount),

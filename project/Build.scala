@@ -13,14 +13,14 @@ object Versions {
     Option(System.getenv("SCALAJS_VERSION")).getOrElse("0.6.25")
   val ScalaCross =
     if (scalaJSVersion.startsWith("0.6")) {
-      Seq("2.10.7", "2.11.12", "2.12.7")
+      Seq("2.10.7", "2.11.12", "2.12.9")
     } else {
-      Seq("2.11.12", "2.12.7")
+      Seq("2.11.12", "2.12.9", "2.13.1-bin-dfde51f")
     }
 
-  val ScalaTest = "3.0.5"
-  val ScalaCheck = "1.13.5"
-  val Json4s = "3.6.1"
+  val ScalaTest = "3.1.0-SNAP13"
+  val ScalaCheck = "1.14.0"
+  val Json4s = "3.6.7"
 }
 
 object Dependencies {
@@ -30,6 +30,7 @@ object Dependencies {
 }
 
 object Resolvers {
+  val scalaIntegrationRepo = "Scala Integration" at "https://scala-ci.typesafe.com/artifactory/scala-integration/"
   val typeSafeRepo = "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/"
   val sonatypeNexusSnapshots = "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
   val sonatypeNexusReleases = "Sonatype Nexus Releases" at "https://oss.sonatype.org/content/repositories/releases"
@@ -51,6 +52,7 @@ object Project {
     autoAPIMappings := true,
 
     resolvers ++= Seq(
+        Resolvers.scalaIntegrationRepo,
         Resolvers.typeSafeRepo,
         Resolvers.sonatypeNexusSnapshots,
         Resolvers.sonatypeNexusReleases,
@@ -79,12 +81,12 @@ object Compiler {
       "-Xfatal-warnings",
       "-unchecked",
       "-Xfuture",
-      "-Ywarn-dead-code",
-      "-Yno-adapted-args"
+      "-Ywarn-dead-code"
     ),
 
     scalacOptions ++= PartialFunction.condOpt(CrossVersion.partialVersion(scalaVersion.value)){
-      case Some((2, scalaMajor)) if scalaMajor >= 11 => newerCompilerLintSwitches
+      case Some((2, scalaMajor)) if scalaMajor == 11 || scalaMajor == 12 => newerCompilerLintSwitches :+ "-Yno-adapted-args"
+      case Some((2, scalaMajor)) if scalaMajor >= 13 => newerCompilerLintSwitches
     }.toList.flatten,
 
     scalaVersion in ThisBuild := Versions.Scala,
