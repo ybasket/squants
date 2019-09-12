@@ -8,14 +8,14 @@ import com.typesafe.sbt.osgi.SbtOsgi.autoImport._
 
 object Versions {
   val Squants = "1.4.0"
-  val Scala = "2.11.12" // Don't use 2.12 yet to avoid troubles with native
+  val Scala = "2.13.1-bin-d602ff4" // Don't use 2.12 yet to avoid troubles with native
   val scalaJSVersion =
     Option(System.getenv("SCALAJS_VERSION")).getOrElse("0.6.25")
   val ScalaCross =
     if (scalaJSVersion.startsWith("0.6")) {
       Seq("2.10.7", "2.11.12", "2.12.9")
     } else {
-      Seq("2.11.12", "2.12.9", "2.13.1-bin-dfde51f")
+      Seq("2.11.12", "2.12.9", "2.13.1-bin-d602ff4")
     }
 
   val ScalaTest = "3.1.0-SNAP13"
@@ -86,7 +86,7 @@ object Compiler {
 
     scalacOptions ++= PartialFunction.condOpt(CrossVersion.partialVersion(scalaVersion.value)){
       case Some((2, scalaMajor)) if scalaMajor == 11 || scalaMajor == 12 => newerCompilerLintSwitches :+ "-Yno-adapted-args"
-      case Some((2, scalaMajor)) if scalaMajor >= 13 => newerCompilerLintSwitches
+      case Some((2, scalaMajor)) if scalaMajor >= 13 => newerCompilerLintSwitches ++ Seq() // , "-Ybreak-cycles", "-Yrecursion", "2147483647"
     }.toList.flatten,
 
     scalaVersion in ThisBuild := Versions.Scala,
